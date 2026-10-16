@@ -1,0 +1,5 @@
+model,MAE,RMSE,mean_actual_cpu_h
+persistence_24h,0.5338,0.7178,0.9599
+seasonal_naive_168h,0.4933,0.6683,0.9599
+seasonal_ma_4w,0.3951,0.5241,0.9599
+xgboost,0.3559,0.4742,0.9599

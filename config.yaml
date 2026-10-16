@@ -1,0 +1,149 @@
+# CarbonShift configuration — all tunables live here.
+seed: 42
+
+paths:
+  raw_carbon: data/raw/carbon        # one sub-folder per zone (folder name = zone, whitespace stripped)
+  processed: data/processed
+  models: models
+  results: results
+
+timezone_display: Asia/Kolkata       # times stored in UTC, shown in IST
+
+# Two worker groups ("regions" in the scheduler). The AWS free plan allows a single region
+# (ap-southeast-2), so both groups run there; each is bound to one Indian grid zone's carbon trace.
+regions:
+  - zone: IN-WE
+    label: Region A (Western India grid)
+    cloud_region: ap-southeast-2
+  - zone: IN-SO
+    label: Region B (Southern India grid)
+    cloud_region: ap-southeast-2
+
+carbon:
+  # Electricity Maps CSV columns (verified against the 2026-02-10 snapshots)
+  datetime_col: "Datetime (UTC)"
+  target_col: "Carbon intensity gCO₂eq/kWh (Life cycle)"   # LCA (default)
+  direct_col: "Carbon intensity gCO₂eq/kWh (direct)"
+  cfe_col: "Carbon-free energy percentage (CFE%)"
+  re_col: "Renewable energy percentage (RE%)"
+  use_direct: false                  # true -> forecast direct instead of LCA
+  # Cleaning: an hour is a spike if it deviates from the centred 5-h median by more than this (g)
+  spike_threshold_g: 150
+  # Synthetic fallback (only used when no CSVs are found)
+  synthetic:
+    years: [2021, 2022, 2023, 2024]
+
+split:
+  train_years: [2021, 2022, 2023]
+  test_years: [2024]
+  # tail of the training period held out for XGBoost early stopping, then refit on all train
+  early_stop_val_days: 90
+
+forecast:
+  horizons: 24                       # 1..24 h ahead, hourly
+  lags: [1, 2, 3, 24, 168]           # relative to the first forecast hour (lag 1 = latest observation)
+  rolling_windows: [24]
+  use_cfe_feature: true              # optional low-carbon % feature
+  # what XGBoost predicts: residual_persistence (y - same hour yesterday), delta_lag1 (y - latest obs) or level
+  target_mode: residual_persistence
+  xgboost:
+    n_estimators: 2000
+    learning_rate: 0.05
+    max_depth: 6
+    subsample: 0.8
+    colsample_bytree: 0.8
+    min_child_weight: 5
+    early_stopping_rounds: 50
+    n_jobs: -1
+
+# --- Phase 2: workload, scheduler, simulator ---
+time_compression:
+  real_seconds_per_sim_hour: 60
+
+workload:
+  mean_jobs_per_hour: 8              # weekly average arrival rate
+  # Poisson arrivals, rate shaped by IST hour; weekly profile normalised to mean 1
+  office_hours_ist: [9, 18]          # [start, end)
+  shoulder_hours_ist: [[7, 9], [18, 22]]
+  office_factor: 1.8
+  shoulder_factor: 1.0
+  night_factor: 0.4
+  weekend_factor: 0.6
+  # job size: log-normal CPU-minutes, clipped
+  size_median_min: 5
+  size_sigma: 0.9
+  size_min_min: 1
+  size_max_min: 30
+  default_slack_h: 12
+  slack_values_h: [2, 6, 12, 24]
+  train_seed_offset: 1               # 2021–2023 training stream uses seed + offset
+
+workload_forecast:
+  lags: [1, 2, 3, 24, 168]
+  xgboost:
+    n_estimators: 400
+    learning_rate: 0.05
+    max_depth: 4
+    subsample: 0.8
+    colsample_bytree: 0.8
+    min_child_weight: 10
+    n_jobs: -1
+
+vm:
+  size: t3.micro                    # 2 vCPU, 1 GiB; one worker process per VM (one job at a time)
+  vcpus: 2
+  memory_gb: 1
+  max_per_region: 2                 # 2 groups x 2 x 2 vCPU = 8 = account vCPU quota in ap-southeast-2
+  price_per_hour_usd: 0.0132        # t3.micro Linux on-demand, ap-southeast-2 (AWS Price List API, Oct 2026)
+  ipv4_price_per_hour_usd: 0.005    # public IPv4 address while the instance runs
+  disk_price_per_month_usd: 0.768   # 8 GB gp3 x $0.096/GB-month, billed even when stopped
+
+energy:
+  # Cloud Carbon Footprint (CCF) AWS coefficients: per-vCPU min/max W, memory W/GB, PUE
+  min_watts_per_vcpu: 0.74
+  max_watts_per_vcpu: 3.5
+  memory_watts_per_gb: 0.392
+  pue: 1.135
+
+scheduler:
+  alpha: 1.0              # weight on predicted carbon (g)
+  beta: 0.0               # weight on marginal VM cost (USD) — 0 = carbon-first
+  gamma: 0.001            # weight on delay (per hour) — tie-breaker toward running earlier
+  safety_buffer_h: 1      # never plan a job into its last `buffer` feasible hours; run now if slack < buffer
+  gate_k: 1.0             # delay only if predicted saving (g/kWh) > gate_k × MAE(h) × inflation
+  gate_adaptive: false    # variant: inflate margin by max(1, recent h=1 error / MAE(h=1)) over the last 3 h
+                          # (tested as policy cs_adaptive_gate; it hurt carbon on surprise cloudy days)
+  workload_reserve_frac: 0.5   # share of forecast arrivals kept free in future hours
+
+sim:
+  start: "2024-01-01 00:00"         # UTC; test year only
+  end: "2025-01-01 00:00"
+  submit_cutoff_h: 26               # stop submitting jobs this many hours before the end
+  n_workers: 8                      # parallel simulation processes
+
+inject:
+  slack_values_h: [6, 12]           # tight slack is where the safety buffer matters
+  cloudy:                           # "surprise cloudy day": actual carbon up, forecasts unaware until observed
+    zones: [IN-WE, IN-SO]
+    increase_pct: 25
+    start_hour_ist: 8
+    duration_h: 10
+    first_day: "2024-01-03"
+    every_days: 7
+  burst:                            # "workload burst": extra arrivals on top of the normal stream
+    multiplier: 3.0
+    start_hour_ist: 10
+    duration_h: 6
+    first_day: "2024-01-05"
+    every_days: 7
+
+# --- Phase 3: AWS deployment (infra/*.sh and src/cloud/*) ---
+cloud:
+  provider: aws
+  region: ap-southeast-2            # free plan: one region only
+  name_prefix: carbonshift          # every resource is named carbonshift-*
+  tag_key: project
+  tag_value: carbonshift            # ...and tagged project=carbonshift (teardown deletes only these)
+  ami_ssm_parameter: /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id
+  root_volume_gb: 8
+  queue_visibility_timeout_s: 120

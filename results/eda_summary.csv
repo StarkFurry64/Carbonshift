@@ -1,0 +1,3 @@
+zone,mean,std,min,max,cleanest_hour_ist,dirtiest_hour_ist,avg_diurnal_profile_range,median_within_day_range,cleanest_month,dirtiest_month,weekday_mean,weekend_mean,pct_estimated
+IN-SO,519.4,69.7,335.5,698.6,13,5,106.0,118.5,Jul,Apr,520.5,516.7,96.4
+IN-WE,659.0,51.1,445.8,773.1,12,5,69.3,76.7,Jul,Apr,659.0,659.0,96.4

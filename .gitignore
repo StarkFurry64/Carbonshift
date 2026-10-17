@@ -7,3 +7,15 @@ data/processed/
 models/*.joblib
 .env
 .pytest_cache/
+
+# Report (kept locally, not published) and assistant project notes
+report/
+CLAUDE.md
+
+# Results: keep charts, metrics tables and the final live runs; skip test runs and terminal logs
+results/live/archive/
+results/live/*.log
+results/live/*.txt
+
+# Generated VM startup scripts (contain the AWS account ID); recreate with: infra/create.sh --render-userdata
+infra/userdata/

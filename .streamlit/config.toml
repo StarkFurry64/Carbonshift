@@ -1,0 +1,8 @@
+[theme]
+primaryColor = "#1baf7a"
+
+[client]
+toolbarMode = "minimal"      # hides the "Deploy" button
+
+[browser]
+gatherUsageStats = false

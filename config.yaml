@@ -147,3 +147,6 @@ cloud:
   ami_ssm_parameter: /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id
   root_volume_gb: 8
   queue_visibility_timeout_s: 120
+  vm_boot_s_estimate: 40            # start request -> worker polling (measured 25 s on t3.micro, 17 Oct); pre-start margin
+  live_default_day: "2024-03-05"    # IST day replayed by the live controller (a normal Tuesday)
+  live_default_slack_h: 6           # shorter than the simulator's 12 h so a live run ends within ~30 sim hours

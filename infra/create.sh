@@ -4,6 +4,7 @@
 # find and delete exactly these resources and nothing else in the account.
 #
 #   infra/create.sh --plan    print what would be created (read-only AWS calls only)
+#   infra/create.sh --render-userdata   write the VM startup scripts to infra/userdata/ (manual setup)
 #   infra/create.sh           create (asks for confirmation), wait for workers, then STOP the VMs
 #
 # Safe to re-run: existing resources are detected and skipped.
@@ -20,6 +21,47 @@ AMI=$(aws ssm get-parameter --name "$AMI_PARAM" --query Parameter.Value --output
 ROOT_DEV=$(aws ec2 describe-images --image-ids "$AMI" --query 'Images[0].RootDeviceName' --output text)
 VPC=$(aws ec2 describe-vpcs --filters Name=is-default,Values=true --query 'Vpcs[0].VpcId' --output text)
 N_VMS=$(( $(echo "$WORKER_GROUPS" | wc -w) * VMS_PER_GROUP ))
+
+# cloud-init script: install boto3, write the worker, run it as a systemd service (starts on every boot)
+user_data() {  # $1 = group, $2 = queue URL
+  cat <<EOF
+#!/bin/bash
+set -euxo pipefail
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -y
+apt-get install -y python3-boto3
+mkdir -p /opt/carbonshift
+cat > /opt/carbonshift/worker.py <<'PYEOF'
+$(cat src/cloud/worker.py)
+PYEOF
+cat > /etc/systemd/system/carbonshift-worker.service <<'UNIT'
+[Unit]
+Description=CarbonShift worker
+After=network-online.target
+Wants=network-online.target
+[Service]
+Environment=CS_GROUP=$1 CS_QUEUE_URL=$2 CS_TABLE=$TABLE CS_SPEEDUP=$SPEEDUP AWS_DEFAULT_REGION=$REGION
+ExecStart=/usr/bin/python3 -u /opt/carbonshift/worker.py
+Restart=always
+RestartSec=5
+[Install]
+WantedBy=multi-user.target
+UNIT
+systemctl daemon-reload
+systemctl enable --now carbonshift-worker
+EOF
+}
+
+# --render-userdata: write the per-group startup scripts to infra/userdata/ (for launching VMs by hand)
+if [[ "${1:-}" == "--render-userdata" ]]; then
+  mkdir -p infra/userdata
+  for g in $WORKER_GROUPS; do
+    user_data "$g" "https://sqs.$REGION.amazonaws.com/$ACCOUNT/$QUEUE_PREFIX$g" > "infra/userdata/$g.sh"
+    echo "wrote infra/userdata/$g.sh"
+  done
+  exit 0
+fi
+
 
 cat <<EOF
 Account $ACCOUNT | region $REGION | default VPC $VPC | AMI $AMI (Canonical Ubuntu 24.04)
@@ -81,36 +123,6 @@ for g in $WORKER_GROUPS; do
     --attributes "VisibilityTimeout=$VISIBILITY_TIMEOUT,MessageRetentionPeriod=86400,ReceiveMessageWaitTimeSeconds=20" \
     --query QueueUrl --output text
 done
-
-# cloud-init script: install boto3, write the worker, run it as a systemd service (starts on every boot)
-user_data() {  # $1 = group, $2 = queue URL
-  cat <<EOF
-#!/bin/bash
-set -euxo pipefail
-export DEBIAN_FRONTEND=noninteractive
-apt-get update -y
-apt-get install -y python3-boto3
-mkdir -p /opt/carbonshift
-cat > /opt/carbonshift/worker.py <<'PYEOF'
-$(cat src/cloud/worker.py)
-PYEOF
-cat > /etc/systemd/system/carbonshift-worker.service <<'UNIT'
-[Unit]
-Description=CarbonShift worker
-After=network-online.target
-Wants=network-online.target
-[Service]
-Environment=CS_GROUP=$1 CS_QUEUE_URL=$2 CS_TABLE=$TABLE CS_SPEEDUP=$SPEEDUP AWS_DEFAULT_REGION=$REGION
-ExecStart=/usr/bin/python3 -u /opt/carbonshift/worker.py
-Restart=always
-RestartSec=5
-[Install]
-WantedBy=multi-user.target
-UNIT
-systemctl daemon-reload
-systemctl enable --now carbonshift-worker
-EOF
-}
 
 log "EC2 instances"
 for g in $WORKER_GROUPS; do

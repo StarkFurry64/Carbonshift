@@ -1,0 +1,16 @@
+{
+ "1. Introduction": 2,
+ "2. System architecture": 2,
+ "3. Input data and features": 3,
+ "4. Machine-learning model and prediction horizon": 5,
+ "5. Resource allocation and autoscaling design": 6,
+ "6. Implementation on AWS": 7,
+ "7. Evaluation: full-year simulation": 9,
+ "8. Evaluation: live runs on AWS": 10,
+ "9. What happens when the prediction is wrong": 12,
+ "10. Discussion and limitations": 14,
+ "11. Conclusion and future work": 14,
+ "References": 14,
+ "Appendix A. How to reproduce": 14,
+ "Abstract": 1
+}

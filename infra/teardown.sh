@@ -17,7 +17,8 @@ SG=$(aws ec2 describe-security-groups --filters Name=group-name,Values="$SG_NAME
 QUEUES=$(for g in $WORKER_GROUPS; do aws sqs get-queue-url --queue-name "$QUEUE_PREFIX$g" --query QueueUrl --output text 2>/dev/null || true; done)
 HAS_TABLE=$(aws dynamodb describe-table --table-name "$TABLE" --query Table.TableName --output text 2>/dev/null || true)
 HAS_ROLE=$(aws iam get-role --role-name "$ROLE" --query Role.RoleName --output text 2>/dev/null || true)
-HAS_PROFILE=$(aws iam get-instance-profile --instance-profile-name "$PROFILE" --query InstanceProfile.InstanceProfileName --output text 2>/dev/null || true)
+# instance profiles holding the role (created by create.sh as $PROFILE, or by the IAM console under the role's name)
+PROFILES=$(aws iam list-instance-profiles-for-role --role-name "$ROLE" --query 'InstanceProfiles[].InstanceProfileName' --output text 2>/dev/null || true)
 
 cat <<EOF
 Region $REGION — will DELETE:
@@ -25,7 +26,7 @@ Region $REGION — will DELETE:
   Security group:                ${SG/None/none}
   SQS queues:                    ${QUEUES:-none}
   DynamoDB table:                ${HAS_TABLE:-none}   (job results — export them first: python -m src.cloud.controller --export)
-  IAM role / instance profile:   ${HAS_ROLE:-none} / ${HAS_PROFILE:-none}
+  IAM role / instance profile:   ${HAS_ROLE:-none} / ${PROFILES:-none}
 EOF
 if [[ "${1:-}" != "--yes" ]]; then
   read -r -p "Delete all of the above? [y/N] " answer
@@ -39,11 +40,12 @@ fi
 if [[ "$SG" != "None" ]]; then log "Security group"; aws ec2 delete-security-group --group-id "$SG"; fi
 for q in $QUEUES; do log "Queue $q"; aws sqs delete-queue --queue-url "$q"; done
 if [[ -n "$HAS_TABLE" ]]; then log "DynamoDB table"; aws dynamodb delete-table --table-name "$TABLE" >/dev/null; fi
-if [[ -n "$HAS_PROFILE" ]]; then
-  log "Instance profile"
-  aws iam remove-role-from-instance-profile --instance-profile-name "$PROFILE" --role-name "$ROLE" 2>/dev/null || true
-  aws iam delete-instance-profile --instance-profile-name "$PROFILE"
-fi
+for p in $PROFILES; do
+  [[ "$p" == "$PREFIX"* ]] || { echo "skipping instance profile $p (not $PREFIX-*)"; continue; }
+  log "Instance profile $p"
+  aws iam remove-role-from-instance-profile --instance-profile-name "$p" --role-name "$ROLE"
+  aws iam delete-instance-profile --instance-profile-name "$p"
+done
 if [[ -n "$HAS_ROLE" ]]; then
   log "IAM role"
   aws iam delete-role-policy --role-name "$ROLE" --policy-name "$PREFIX-worker" 2>/dev/null || true

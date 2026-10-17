@@ -1,0 +1,59 @@
+20:31:52 INFO controller: run carbonshift-none-20240305-20261017-203152 | policy=carbonshift scenario=none | 210 jobs submitted 05 Mar 00:30 → 06 Mar 00:30 IST | slack 6 h | 1 sim hour = 60 s | groups IN-WE, IN-SO
+20:31:56 INFO controller: [05 Mar 00:30 IST] sent  0 (IN-WE 0 IN-SO 0) | waiting   0 | VMs IN-WE 0→0 IN-SO 0→0 | done 0/210 | CO₂ 0.0 g | missed 0
+20:32:55 INFO controller:   start IN-SO (i-02fe168e498fb6577)
+20:32:57 INFO controller: [05 Mar 01:30 IST] sent  5 (IN-WE 0 IN-SO 5) | waiting   0 | VMs IN-WE 0→0 IN-SO 0→1 | done 0/210 | CO₂ 1.4 g | missed 0
+20:33:55 INFO controller: [05 Mar 02:30 IST] sent  3 (IN-WE 0 IN-SO 3) | waiting   0 | VMs IN-WE 0→0 IN-SO 1→1 | done 5/210 | CO₂ 3.4 g | missed 0
+20:34:55 INFO controller:   start IN-SO (i-042e134a481675204)
+20:34:57 INFO controller: [05 Mar 03:30 IST] sent  6 (IN-WE 0 IN-SO 6) | waiting   0 | VMs IN-WE 0→0 IN-SO 1→2 | done 8/210 | CO₂ 6.7 g | missed 0
+20:35:56 INFO controller: [05 Mar 04:30 IST] sent  0 (IN-WE 0 IN-SO 0) | waiting   2 | VMs IN-WE 0→0 IN-SO 2→2 | done 14/210 | CO₂ 11.7 g | missed 0
+20:36:56 INFO controller:   stop  IN-SO (i-042e134a481675204, i-02fe168e498fb6577)
+20:36:57 INFO controller: [05 Mar 05:30 IST] sent  0 (IN-WE 0 IN-SO 0) | waiting   6 | VMs IN-WE 0→0 IN-SO 2→0 | done 14/210 | CO₂ 14.5 g | missed 0
+20:37:54 INFO controller:   start IN-SO (i-02fe168e498fb6577)
+20:37:56 INFO controller: [05 Mar 06:30 IST] sent  0 (IN-WE 0 IN-SO 0) | waiting  10 | VMs IN-WE 0→0 IN-SO 0→1 | done 14/210 | CO₂ 15.9 g | missed 0
+20:39:03 INFO controller: [05 Mar 07:30 IST] sent 10 (IN-WE 0 IN-SO 10) | waiting   4 | VMs IN-WE 0→0 IN-SO 1→1 | done 14/210 | CO₂ 17.1 g | missed 0
+20:39:57 INFO controller: [05 Mar 08:30 IST] sent  9 (IN-WE 0 IN-SO 9) | waiting   3 | VMs IN-WE 0→0 IN-SO 1→1 | done 22/210 | CO₂ 19.9 g | missed 0
+20:40:55 INFO controller: [05 Mar 09:30 IST] sent  0 (IN-WE 0 IN-SO 0) | waiting  13 | VMs IN-WE 0→0 IN-SO 1→1 | done 33/210 | CO₂ 22.8 g | missed 0
+20:41:56 INFO controller: [05 Mar 10:30 IST] sent  0 (IN-WE 0 IN-SO 0) | waiting  36 | VMs IN-WE 0→0 IN-SO 1→1 | done 33/210 | CO₂ 24.0 g | missed 0
+20:42:57 INFO controller:   start IN-SO (i-042e134a481675204)
+20:42:59 INFO controller: [05 Mar 11:30 IST] sent 11 (IN-WE 0 IN-SO 11) | waiting  36 | VMs IN-WE 0→0 IN-SO 1→2 | done 33/210 | CO₂ 26.1 g | missed 0
+20:43:59 INFO controller: [05 Mar 12:30 IST] sent 19 (IN-WE 0 IN-SO 19) | waiting  30 | VMs IN-WE 0→0 IN-SO 2→2 | done 44/210 | CO₂ 29.8 g | missed 0
+20:44:57 INFO controller: [05 Mar 13:30 IST] sent 15 (IN-WE 0 IN-SO 15) | waiting  33 | VMs IN-WE 0→0 IN-SO 2→2 | done 62/210 | CO₂ 34.7 g | missed 0
+20:45:57 INFO controller: [05 Mar 14:30 IST] sent 13 (IN-WE 0 IN-SO 13) | waiting  34 | VMs IN-WE 0→0 IN-SO 2→2 | done 77/210 | CO₂ 39.3 g | missed 0
+20:46:59 INFO controller: [05 Mar 15:30 IST] sent 17 (IN-WE 0 IN-SO 17) | waiting  30 | VMs IN-WE 0→0 IN-SO 2→2 | done 91/210 | CO₂ 44.3 g | missed 0
+20:48:08 INFO controller: [05 Mar 16:30 IST] sent 20 (IN-WE 0 IN-SO 20) | waiting  26 | VMs IN-WE 0→0 IN-SO 2→2 | done 107/210 | CO₂ 49.2 g | missed 0
+20:48:59 INFO controller: [05 Mar 17:30 IST] sent 20 (IN-WE 0 IN-SO 20) | waiting  21 | VMs IN-WE 0→0 IN-SO 2→2 | done 124/210 | CO₂ 54.2 g | missed 0
+20:49:59 INFO controller: [05 Mar 18:30 IST] sent 11 (IN-WE 0 IN-SO 11) | waiting  21 | VMs IN-WE 0→0 IN-SO 2→2 | done 148/210 | CO₂ 59.9 g | missed 0
+20:54:04 INFO controller: [05 Mar 19:30 IST] sent 15 (IN-WE 0 IN-SO 15) | waiting  12 | VMs IN-WE 0→0 IN-SO 2→2 | done 159/210 | CO₂ 64.4 g | missed 0
+20:54:13 INFO controller: [05 Mar 20:30 IST] sent 14 (IN-WE 0 IN-SO 14) | waiting   2 | VMs IN-WE 0→0 IN-SO 2→2 | done 174/210 | CO₂ 67.0 g | missed 0
+20:54:16 INFO controller: [05 Mar 21:30 IST] sent  0 (IN-WE 0 IN-SO 0) | waiting  11 | VMs IN-WE 0→0 IN-SO 2→2 | done 174/210 | CO₂ 73.1 g | missed 0
+20:54:20 INFO controller: [05 Mar 22:30 IST] sent  2 (IN-WE 0 IN-SO 2) | waiting  18 | VMs IN-WE 0→0 IN-SO 2→2 | done 175/210 | CO₂ 76.3 g | missed 0
+20:55:03 INFO controller: [05 Mar 23:30 IST] sent  8 (IN-WE 0 IN-SO 8) | waiting  11 | VMs IN-WE 0→0 IN-SO 2→2 | done 183/210 | CO₂ 81.7 g | missed 7
+20:55:58 INFO controller: [06 Mar 00:30 IST] sent 12 (IN-WE 0 IN-SO 12) | waiting   0 | VMs IN-WE 0→0 IN-SO 2→2 | done 198/210 | CO₂ 88.4 g | missed 7
+20:56:57 INFO controller: [06 Mar 01:30 IST] sent  0 (IN-WE 0 IN-SO 0) | waiting   0 | VMs IN-WE 0→0 IN-SO 2→2 | done 210/210 | CO₂ 94.3 g | missed 7
+20:56:57 INFO controller: all 210 jobs finished
+20:57:00 INFO controller: stopping VMs: i-02fe168e498fb6577, i-042e134a481675204
+20:57:03 INFO controller: summary → /Users/tanish/Documents/7th Sem/ACC/LAB IA/results/live/carbonshift-none-20240305-20261017-203152/summary.json
+  run_id                       carbonshift-none-20240305-20261017-203152
+  policy                       carbonshift
+  scenario                     none
+  dry_run                      False
+  day                          2024-03-05
+  seconds_per_sim_hour         60
+  slack_h                      6
+  jobs                         210
+  jobs_finished                210
+  deadline_miss_pct            3.333
+  avg_wait_h                   2.949
+  p95_wait_h                   5.107
+  sim_hours                    26
+  vm_hours                     43
+  energy_kwh                   0.1642
+  carbon_g                     94.26
+  avg_util_pct                 54.07
+  vm_cost_usd_sim_equivalent   0.7826
+  real_minutes                 25.16
+  real_aws_cost_usd            0.01304
+  sim_carbonshift_carbon_g     76.07
+  sim_carbonshift_avg_wait_h   2.385
+  sim_fifo_carbon_g            103
+  sim_fifo_avg_wait_h          0.8857

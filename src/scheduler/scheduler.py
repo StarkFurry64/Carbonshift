@@ -33,6 +33,7 @@ class Planner:
         """fc: [R, T, 24] carbon forecasts for hours t..t+23 made at tick t; actual: [R, T];
         wl: [T, 24] CPU-seconds forecast to arrive in hours t..t+23; mae: [R, 24] by horizon."""
         self.p = policy
+        self.last_load: np.ndarray | None = None
         self.fc = np.where(np.isfinite(fc), fc, np.inf)
         self.wl = wl
         self.mae = mae
@@ -59,6 +60,7 @@ class Planner:
     def decide(self, t: int, pending: list[int]) -> list[tuple[int, int]]:
         """Returns [(job, region)] to start in hour t, in execution priority order."""
         if self.p.kind == "fifo":
+            self.last_load = None
             return [(j, self.p.regions[0]) for j in pending]          # pending is in arrival order
         fc = self.fc[:, t, :]
         R, K = fc.shape
@@ -85,6 +87,7 @@ class Planner:
             load[r, k] += dur
             if k == 0:
                 run_now.append((j, r))
+        self.last_load = load            # planned CPU-seconds per (region, hour ahead); used for VM pre-start
         return run_now
 
     def _best(self, fc, load, reserve, ks, dur):

@@ -1,0 +1,18 @@
+$ aws sqs list-queues --queue-name-prefix carbonshift
+https://sqs.ap-southeast-2.amazonaws.com/428521272060/carbonshift-jobs-IN-SO
+https://sqs.ap-southeast-2.amazonaws.com/428521272060/carbonshift-jobs-IN-WE
+
+$ aws sqs get-queue-attributes  (both queues)
+carbonshift-jobs-IN-WE: {"VisibilityTimeout":"120","MessageRetentionPeriod":"86400","ReceiveMessageWaitTimeSeconds":"20"}
+carbonshift-jobs-IN-SO: {"VisibilityTimeout":"120","MessageRetentionPeriod":"86400","ReceiveMessageWaitTimeSeconds":"20"}
+
+$ aws dynamodb describe-table --table-name carbonshift-results
+  name=carbonshift-results  status=ACTIVE  key=job_id  billing=PAY_PER_REQUEST (on-demand)
+
+$ aws ec2 describe-security-groups --group-names carbonshift-worker-sg
+  id=sg-00ffc90c10a2b9bf1  inbound_rules=0  outbound=0.0.0.0/0 (all)
+
+$ aws iam list-attached-role-policies / get-role-policy  --role-name carbonshift-worker-role
+  managed: AmazonSSMManagedInstanceCore
+  inline: sqs:ReceiveMessage, sqs:DeleteMessage, sqs:ChangeMessageVisibility, sqs:GetQueueAttributes -> arn:aws:sqs:ap-southeast-2:428521272060:carbonshift-jobs-*
+  inline: dynamodb:PutItem -> arn:aws:dynamodb:ap-southeast-2:428521272060:table/carbonshift-results

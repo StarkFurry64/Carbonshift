@@ -1,6 +1,8 @@
 # CarbonShift — carbon-aware batch job scheduler
 
 ML-based cloud resource manager for the *Advanced Cloud Computing* Lab IA. See `CLAUDE.md` for the full design.
+Runs on AWS (free plan, `ap-southeast-2`): 4 × t3.micro workers in 2 groups bound to the Western (IN-WE) and
+Southern (IN-SO) Indian grids, SQS job queues, a DynamoDB results table; the controller runs on the laptop.
 
 ## Setup
 ```bash
@@ -28,3 +30,30 @@ folder name is the zone. If no CSVs are present, a synthetic generator is used (
 ```
 Outputs: `policy_comparison.csv/.png`, `carbon_vs_delay.png`, `failure_injection.csv/.png`,
 `schedule_timeline_example.png`. Policies are defined in `src/scheduler/policies.py`; all tunables in `config.yaml`.
+
+## Phase 3 — AWS deployment
+Log in once per session (temporary credentials, no access keys): `aws login`, then
+`aws configure set region ap-southeast-2`.
+```bash
+infra/create.sh --plan              # what would be created (read-only)
+infra/create.sh                     # create everything (or follow the manual console steps; we did that)
+infra/create.sh --render-userdata   # VM startup scripts for manual launches -> infra/userdata/
+infra/vms.sh status|start|stop      # only VMs tagged project=carbonshift
+infra/teardown.sh                   # delete every carbonshift-* resource (asks first)
+
+# live demo: replays one 2024 day on the real VMs and stops them at the end (or on Ctrl+C)
+.venv/bin/python -m src.cloud.controller --dry-run                           # fake VMs, no AWS, ~3 s
+.venv/bin/python -m src.cloud.controller --prewarm                           # 24 sim h at 60 s/h (~27 min)
+.venv/bin/python -m src.cloud.controller --seconds-per-hour 20 --prewarm     # presentation speed (~10 min)
+.venv/bin/python -m src.cloud.controller --policy fifo --prewarm             # baseline on real VMs
+.venv/bin/python -m src.cloud.controller --scenario cloudy|burst --prewarm   # failure injection, live
+```
+Each run writes `results/live/<run_id>/{timeline.csv, jobs.csv, summary.json}`; job results are also in
+DynamoDB (`carbonshift-results`, filter on `run_id`).
+
+## Phase 4 — dashboard
+```bash
+.venv/bin/streamlit run src/dashboard/app.py      # http://localhost:8501
+```
+Tabs: **Live run** (auto-refresh while a controller runs, or replay a finished run), **Compare runs**,
+**Simulation (Phase 2)**, **Forecasting (Phase 1)**.
